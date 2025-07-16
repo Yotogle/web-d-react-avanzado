@@ -4,7 +4,6 @@ import './index.css'
 import * as yup from 'yup'
 import axios from 'axios'
 import { useState } from 'react'
-import { useData } from './hooks/useData'
 
 const schema = yup.object({
   userInput: yup
@@ -13,6 +12,8 @@ const schema = yup.object({
     .required('El mensaje es obligatorio')
 })
 
+const 
+
 export const App = () => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
@@ -20,9 +21,6 @@ export const App = () => {
   // Guarda la respuesta de llama2
   const [response, setResponse] = useState('')
   const [loading, setLoading] = useState(false)
-  const { multiplicar } = useData()
-
-  console.log(multiplicar(5))
 
   const handlePregunta = async (data) => {
     console.log(data)
