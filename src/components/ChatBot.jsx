@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useContext } from 'react'
-import { ChatContext } from '../context/chatContext'
+import { GlobalContext } from '../context/GlobalContex'
 import { useOllama } from '../hooks/useOllama'
 
 const schema = yup.object({
@@ -16,7 +16,7 @@ export const ChatBot = () => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   })
-  const { state, dispatch } = useContext(ChatContext)
+  const { state, dispatch } = useContext(GlobalContext)
   const { sendMessage } = useOllama()
 
   const handlePregunta = async (data) => {

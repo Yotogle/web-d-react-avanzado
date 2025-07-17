@@ -1,10 +1,9 @@
-import { createContext, useReducer } from 'react'
-
-// 1. Crear el contexto global
-export const ChatContext = createContext()
+import { useReducer } from 'react'
+import { GlobalContext } from './GlobalContex'
 
 const initialState = {
-  messages: []
+  messages: [],
+
 }
 
 const chatReducer = (state, action) => {
@@ -21,13 +20,12 @@ const chatReducer = (state, action) => {
 }
 
 // 2. Provider
-
 export const ChatProvider = ({ children }) => {
   const [state, dispatch] = useReducer(chatReducer, initialState)
 
   return (
-    <ChatContext.Provider value={{ state, dispatch }}>
+    <GlobalContext.Provider value={{ state, dispatch }}>
       {children}
-    </ChatContext.Provider>
+    </GlobalContext.Provider>
   )
 }
