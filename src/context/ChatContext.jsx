@@ -3,7 +3,7 @@ import { GlobalContext } from './GlobalContex'
 
 const initialState = {
   messages: [],
-
+  loading: false
 }
 
 const chatReducer = (state, action) => {
