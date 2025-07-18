@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useContext } from 'react'
 import { GlobalContext } from '../context/GlobalContex'
 import { useOllama } from '../hooks/useOllama'
+import '../components/ChatBot.css'
 
 const schema = yup.object({
   userInput: yup
@@ -13,7 +14,7 @@ const schema = yup.object({
 })
 
 export const ChatBot = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema)
   })
   const { state, dispatch } = useContext(GlobalContext)
@@ -30,35 +31,33 @@ export const ChatBot = () => {
       console.log(error)
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
+      reset({ userInput: '' })
     }
   }
 
   return (
-    <>
+    <div className='chat-container'>
+
+      <div className='chat-messages'>
+        {state.messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`message ${msg.from === 'user' ? 'user' : 'bot'}`}
+          >
+            {msg.text}
+          </div>
+        ))}
+        {state.loading && <p className='loading'>Generando respuesta 🚀</p>}
+      </div>
       <form onSubmit={handleSubmit(handlePregunta)}>
         <input
           type='text'
           {...register('userInput')}
-          className='w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400'
+          placeholder='Escribe tu mensaje...'
         />
-        {errors.userInput && <p>{errors.userInput.message}</p>}
-        <button
-          className='w-full py-2 rounded transition cursor-pointer bg-blue-600 text-white hover:bg-blue-700'
-        >Preguntar
-        </button>
+        <button type='submit'>Preguntar</button>
       </form>
-      {/* <div>
-        <p>{loading ? 'Generando respuesta 🚀' : response}</p>
-      </div> */}
-      <div>
-        {state.messages.map((msg, index) => (
-          <p key={index}>
-            <strong>{msg.from === 'user' ? 'Tú' : 'Bot'}:</strong>
-            {msg.text}
-          </p>
-        ))}
-        {state.loading && <p>Generando respuesta 🚀 </p>}
-      </div>
-    </>
+      {errors.userInput && <p>{errors.userInput.message}</p>}
+    </div>
   )
 }

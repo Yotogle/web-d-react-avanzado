@@ -1,6 +1,5 @@
 import { ChatBot } from './components/ChatBot'
 import { ChatProvider } from './context/chatContext'
-import './index.css'
 
 export const App = () => {
   return (
