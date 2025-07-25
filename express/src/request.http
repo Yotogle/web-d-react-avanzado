@@ -1,0 +1,38 @@
+GET http://localhost:8080/peliculas HTTP/1.1
+
+###
+GET http://localhost:8080/peliculas/2 HTTP/1.1
+
+###
+
+POST http://localhost:8080/peliculas HTTP/1.1
+Content-Type: application/json
+
+ {
+      "titulo": "gigolo",
+      "director": "George Miller",
+      "year": 2015,
+      "pais": "francia"
+    }
+
+###
+
+POST  http://localhost:8080/peliculas HTTP/1.1
+Content-Type: application/json
+
+{
+    "titulo": "El Caballero Oscuro",
+    "director": "Christopher Nolan",
+    "year": 2008,
+    "pais": "USA"
+}
+
+###
+PUT http://localhost:8080/peliculas/1 HTTP/1.1
+Content-Type: : application/json
+
+{
+    "titulo": "Bob Esponja",
+    "director": "Patricio Estrella",
+    "pais": "Fondo de bikini"
+}

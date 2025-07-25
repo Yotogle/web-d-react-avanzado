@@ -1,106 +1,92 @@
-require('dotenv').config()
-console.log(process.env.PORT)
-console.log(process.env.NOMBRE)
+// 1. Importar express
+// 1ra forma CommonJS
+/* const express = require('express')
+require('dotenv').config() */
+// 2da forma ESmodules
+import express from 'express'
+import dotenv from 'dotenv'
+import fs from 'fs'
 
-// 1 importamos modulo express
-const express = require('express')
-const { infoPeliculas } = require('./peliculas')
-// 2 creamos una aplicacion express
+dotenv.config()
+// 2. Crear la aplicacion de express
+
 const app = express()
-// 3 definimos el puerto que va a escuchar el servidor
-const PORT = 8080
+const PORT = process.env.PORT
+
+// funcion que lee la info de db.json
+const readData = () => {
+  try {
+    const data = fs.readFileSync('./src/db.json')
+    return JSON.parse(data)
+  } catch (error) {
+    console.error(error)
+  }
+}
+console.log(readData())
+
+// funcion que escribe dentro de db.json
+const writeData = (data) => {
+  try {
+    fs.writeFileSync('./src/db.json', JSON.stringify(data))
+  } catch (error) {
+    console.error(error)
+  }
+  // return JSON.stringify(data)
+}
 
 app.get('/', (req, res) => {
-  res.send('Bienvenido a nuestra plataforma de peliculas')
-})
-app.get('/api/peliculas', (req, res) => {
-  res.send(infoPeliculas)
-})
-app.get('/api/peliculas/accion', (req, res) => {
-  res.send(infoPeliculas.accion)
-})
-app.get('/api/peliculas/comedia', (req, res) => {
-  res.send(infoPeliculas.comedia)
-})
-app.get('/api/peliculas/drama', (req, res) => {
-  res.send(infoPeliculas.drama)
-})
-app.get('/api/peliculas/cienciaFiccion', (req, res) => {
-  res.send(infoPeliculas.cienciaFiccion)
+  res.send('Hola desde el back')
 })
 
-app.get('/api/peliculas/:titulo', (req, res) => {
-  const tituloBuscado = req.params.titulo
-  const todoslosGeneros = Object.values(infoPeliculas)
-  const todasLasPeliculas = todoslosGeneros.flat()
-  const resultados = todasLasPeliculas.filter(pelicula => pelicula.titulo.toLowerCase() === tituloBuscado.toLowerCase())
-  if (resultados.length > 0) {
-    res.send(resultados)
-  } else {
-    res.status(404).send({ mensaje: `No se encontraron peliculas con el nombre de ${tituloBuscado}` })
-  }
+app.get('/peliculas', (req, res) => {
+  const data = readData()
+  res.json(data)
+})
+app.get('/peliculas/:id', (req, res) => {
+  const id = Number(req.params.id)
+  const result = readData().accion.find(pelicula => pelicula.id === id)
+  res.json(result)
 })
 
-app.get('/api/peliculas/accion/:titulo', (req, res) => {
-  const titulo = req.params.titulo
-  const resultados = infoPeliculas.accion.filter(pelicula => pelicula.titulo === titulo)
-
-  if (resultados.length === 0) {
-    return res.status(400).send(`No se encontraron resultados para ${titulo}`)
-  }
-  res.send(resultados)
-})
-
-app.get('/api/peliculas/year/:year', (req, res) => {
-  const getAllMovies = () => {
-    const todoslosGeneros = Object.values(infoPeliculas)
-    return todoslosGeneros.flat()
-  }
-  const añoBuscado = req.params.year
-  const añoNumerico = Number(añoBuscado)
-  const todasLasPeliculas = getAllMovies()
-  const resultados = todasLasPeliculas.filter(pelicula => pelicula.year === añoNumerico)
-  if (resultados.length === 0) {
-    return res.status(400).send(`No se encontraron peliculas del año ${añoBuscado}`)
-  }
-  res.send(resultados)
-})
-app.get('/api/peliculas/accion/titulo/:titulo/:year', (req, res) => {
-  /* const titulo = req.params.titulo
-  const year = req.params.year */
-  const { titulo, year } = req.params
-  const resultados = infoPeliculas.accion.filter(pelicula => pelicula.titulo === titulo && pelicula.year === Number(year))
-
-  if (resultados.length === 0) {
-    return res.status(400).send(`No se encontraron resultados para ${titulo} en el año ${year}`)
-  }
-
-  res.send(resultados)
-})
-
-app.get('/api/peliculas/comedia/:pais', (req, res) => {
-  const pais = req.params.pais
-  const resultados = infoPeliculas.comedia.filter(pelicula => pelicula.pais === pais)
-
-  if (req.query.ordenar === 'year') {
-    return res.send(resultados.sort((a, b) => b.year - a.year))
-  }
-
-  res.send(resultados)
-})
-
-// Metodo para subir informaccion al backend
+// enviar  info
 app.use(express.json())
-app.post('/api/peliculas', (req, res) => {
-  const nuevaPelicula = req.body
-
-  console.log(nuevaPelicula)
-  res.status(201).send({
-    mensaje: 'La película se recibió con éxito',
-    datos: nuevaPelicula
-  })
+app.post('/peliculas', (req, res) => {
+  const data = readData()
+  const body = req.body
+  const newMovie = {
+    id: data.accion.length + 1,
+    ...body
+  }
+  data.accion.push(newMovie)
+  writeData(data)
+  res.json(newMovie)
 })
-// 4
+// tercer metodo PUT
+app.put('/peliculas/:id', (req, res) => {
+  const data = readData()
+  const id = parseInt(req.params.id)
+  const body = req.body
+
+  const peliculaIndex = data.accion.findIndex(movie => movie.id === id)
+  data.accion[peliculaIndex] = {
+    ...data.accion[peliculaIndex],
+    ...body
+  }
+  writeData(data)
+  res.json({ message: 'Pelicula actualizada correctamente' })
+})
+
+// cuerto metodo
+
+app.delete('/peliculas/:id', (req, res) => {
+  const data = readData()
+  const id = Number(req.params.id)
+  const peliculaIndex = data.accion.findIndex(movie => movie.id === id)
+  data.accion.splice(peliculaIndex, 1)
+  writeData(data)
+  res.json({ message: 'Pelicula eliminada correctamente' })
+})
+// ###
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`)
+  console.log('Servidor corriendo en el puerto', PORT)
 })
