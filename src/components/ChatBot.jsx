@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { useContext } from 'react'
-import { GlobalContext } from '../context/GlobalContex'
+import { useContext, useEffect } from 'react'
+import { ChatContext } from '../context/ChatContext'
 import { useOllama } from '../hooks/useOllama'
-import '../components/ChatBot.css'
+import axios from 'axios'
+import '../ChatBot.css'
 
 const schema = yup.object({
   userInput: yup
@@ -14,11 +15,31 @@ const schema = yup.object({
 })
 
 export const ChatBot = () => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema)
   })
-  const { state, dispatch } = useContext(GlobalContext)
+  const { state, dispatch } = useContext(ChatContext)
   const { sendMessage } = useOllama()
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get('http://localhost:3001/api/messages')
+        res.data.forEach(m => {
+          dispatch({
+            type: 'ADD_MESSAGE',
+            payload: {
+              sender: m.sender === 'user' ? 'user' : 'bot',
+              text: m.text
+            }
+          })
+        })
+      } catch (error) {
+        console.error('Error al cargar mensaje', error)
+      }
+    }
+    fetchMessages()
+  }, [dispatch])
 
   const handlePregunta = async (data) => {
     dispatch({ type: 'ADD_MESSAGE', payload: { from: 'user', text: data.userInput } })
@@ -31,7 +52,6 @@ export const ChatBot = () => {
       console.log(error)
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
-      reset({ userInput: '' })
     }
   }
 
