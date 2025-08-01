@@ -2,10 +2,10 @@ import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useContext, useEffect } from 'react'
-import { ChatContext } from '../context/ChatContext'
+import { GlobalContext } from '../context/GlobalContex'
 import { useOllama } from '../hooks/useOllama'
 import axios from 'axios'
-import '../ChatBot.css'
+import '../components/ChatBot.css'
 
 const schema = yup.object({
   userInput: yup
@@ -15,10 +15,10 @@ const schema = yup.object({
 })
 
 export const ChatBot = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     resolver: yupResolver(schema)
   })
-  const { state, dispatch } = useContext(ChatContext)
+  const { state, dispatch } = useContext(GlobalContext)
   const { sendMessage } = useOllama()
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export const ChatBot = () => {
           dispatch({
             type: 'ADD_MESSAGE',
             payload: {
-              sender: m.sender === 'user' ? 'user' : 'bot',
+              from: m.sender === 'user' ? 'user' : 'bot',
               text: m.text
             }
           })
@@ -46,12 +46,27 @@ export const ChatBot = () => {
     dispatch({ type: 'SET_LOADING', payload: true })
 
     try {
+      // Guardar mensaje del usuario en la base de datos
+      await axios.post('http://localhost:3001/api/messages', {
+        sender: 'user',
+        text: data.userInput
+      })
       const res = await sendMessage(data.userInput)
-      dispatch({ type: 'ADD_MESSAGE', payload: { from: 'bot', text: res.data.response } })
+
+      const botMessage = { from: 'bot', text: res.data.response }
+
+      // Guardar mensaje del bot en la base de datos
+      await axios.post('http://localhost:3001/api/messages', {
+        sender: 'bot',
+        text: res.data.response
+      })
+
+      dispatch({ type: 'ADD_MESSAGE', payload: botMessage })
     } catch (error) {
       console.log(error)
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false })
+      reset({ userInput: '' })
     }
   }
 

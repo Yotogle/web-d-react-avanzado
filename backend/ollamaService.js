@@ -8,3 +8,4 @@ export const generateFromOllama = async (prompt) => {
   })
   return res.data.response
 }
+

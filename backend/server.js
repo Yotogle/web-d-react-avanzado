@@ -18,8 +18,25 @@ app.post('/api/chat', async (req, res) => {
   const { prompt } = req.body
 
   try {
-    const response = await generateFromOllama(prompt)
-    res.json({ response })
+    // 1. Obtiene la respuesta de Ollama, que aún puede contener el <think>
+    const rawResponse = await generateFromOllama(prompt)
+
+    // 2. Lógica para filtrar el texto de "pensamiento"
+    let cleanResponse = rawResponse
+    const thinkStartTag = '<think>'
+    const thinkEndTag = '</think>'
+
+    const startIndex = rawResponse.indexOf(thinkStartTag)
+    const endIndex = rawResponse.indexOf(thinkEndTag)
+
+    if (startIndex !== -1 && endIndex !== -1) {
+      // Si se encuentran las etiquetas, corta la parte de la respuesta que contiene el "think"
+      cleanResponse = rawResponse.substring(endIndex + thinkEndTag.length).trim()
+    }
+    
+    // 3. Envía la respuesta filtrada al cliente
+    res.json({ response: cleanResponse })
+    
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Error procesando la solicitud' })
